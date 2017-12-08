@@ -1,6 +1,6 @@
 module Tinkoff
   class Request
-    BASE_URL = 'https://securepay.tinkoff.ru/rest/'
+    BASE_URL = 'https://securepay.tinkoff.ru/v2/'
 
     def initialize(path, params = {})
       @url = BASE_URL + path
@@ -9,13 +9,17 @@ module Tinkoff
 
     def perform
       prepare_params
-      response = HTTParty.post(@url, body: @params, format: :json).parsed_response
+      http_params = {body: @params.to_json, format: :json, headers: {"Content-Type" => "application/json"}}
+      http_params[:debug_output] = $stdout if Tinkoff.config.debug
+      response = HTTParty.post(@url, http_params).parsed_response
       Tinkoff::Payment.new(response)
     end
     
     def apply
       prepare_params
-      response = HTTParty.post(@url, body: @params, format: :json, debug_output: $stdout).parsed_response
+      http_params = {body: @params, format: :json, headers: {"Content-Type" => "application/json"}}
+      http_params[:debug_output] = $stdout if Tinkoff.config.debug
+      response = HTTParty.post(@url, http_params).parsed_response
       return response
     end
 
@@ -23,7 +27,7 @@ module Tinkoff
 
     def prepare_params
       # Encode and join DATA hash
-      prepare_data
+      #prepare_data
       # Add terminal key and password
       @params.merge!(default_params)
       # Sort params by key
